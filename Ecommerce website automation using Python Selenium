@@ -1,0 +1,61 @@
+import time
+from cgitb import text
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.select import Select
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+
+sum = 0
+expectedlist = ['Cucumber - 1 Kg', 'Raspberry - 1/4 Kg', 'Strawberry - 1/4 Kg']
+service_obj = Service("C:\personal\Selenium\chromedriver.exe")
+driver = webdriver.Chrome(service=service_obj)
+driver.implicitly_wait(2)
+driver.get("https://rahulshettyacademy.com/seleniumPractise/#/")
+driver.find_element(By.XPATH, "//input[@type='search']").send_keys("ber")
+time.sleep(2)
+product_name = driver.find_elements(By.XPATH, "//h4[@class='product-name']")
+name_list=[]
+for name in product_name:
+    name_list.append(name.text)
+product = driver.find_elements(By.XPATH, "//div[@class='product-action']")
+for i in range(len(product)):
+    product[i].click()
+driver.find_element(By.XPATH, "//img[@alt='Cart']").click()
+driver.find_element(By.XPATH, "//div[@class='action-block']/button[.='PROCEED TO CHECKOUT']").click()
+driver.find_element(By.XPATH, "//input[@class='promoCode']").send_keys("rahulshettyacademy")
+driver.find_element(By.XPATH, "//button[@class='promoBtn']").click()
+wait = WebDriverWait(driver, 10)
+wait.until(expected_conditions.presence_of_all_elements_located((By.XPATH, "//span[@class='promoInfo']")))
+assert driver.find_element(By.XPATH, "//span[@class='promoInfo']").text == "Code applied ..!"
+total = driver.find_elements(By.XPATH, "//p[@class='amount']")
+l=[]
+for to in total:
+    l.append(to.text)
+li=list(set(l))
+sum = 0
+for i in range(len(li)):
+    sum=sum+int(li[i])
+print(sum)
+assert int(driver.find_element(By.XPATH, "//span[@class='totAmt']").text) == sum
+discount = driver.find_element(By.XPATH, "//span[@class='discountAmt']").text
+assert int(driver.find_element(By.XPATH, "//span[@class='totAmt']").text) >= float(discount)
+assert name_list == expectedlist
+#-----------------------Discount Part------------
+diss=driver.find_element(By.XPATH, "//span[@class='discountPerc']").text
+dis_store=diss[0:-1]
+per=int(dis_store)
+percentage=sum-(sum*per/100)
+assert percentage == float(discount)
+#//div[@class='wrapperTwo']//div//select
+#--------Place Order-------------------
+driver.find_element(By.XPATH, "//button[normalize-space()='Place Order']").click()
+
+#Place order page
+
+driver.find_element(By.XPATH, "//div[@class='wrapperTwo']//div//select").click()
+driver.find_element(By.XPATH, "//option[@value='India']").click()
+driver.find_element(By.XPATH, "//input[@type='checkbox']").click()
+driver.find_element(By.XPATH, "//button[normalize-space()='Proceed']").click()
